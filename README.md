@@ -7,7 +7,9 @@ A [Pi](https://github.com/badlogic/pi-mono) extension for designing event invita
 - 🎨 Multiple design styles (Church, Christian, Creative)
 - 📐 Multiple output sizes (A4, Instagram, Facebook, etc.)
 - 🤖 Multiple AI providers (Gemini, Grok, OpenAI)
+- 🔧 Configurable models per provider
 - 🌐 Bilingual support (Chinese/English)
+- 📤 Returns base64 images for integration (e.g., Telegram)
 
 ## Installation
 
@@ -45,10 +47,10 @@ The extension registers a `design_poster` tool that the LLM can call:
 ```
 設計海報：
 
-活動：戶外音樂會
-地點：永康教會
-日期：2025/03/22
-時間：15:30-17:00
+活動：2024年聖誕音樂會
+地點：台北教會
+日期：2024/12/25
+時間：19:00-21:00
 ```
 
 ### Parameters
@@ -59,6 +61,7 @@ The extension registers a `design_poster` tool that the LLM can call:
 | styles | string[] | Style IDs to use (default: all) |
 | size | string | Output size (default: a4) |
 | provider | string | AI provider (default: gemini) |
+| model | string | Model name (default: provider's default) |
 
 ### Available Styles
 
@@ -78,24 +81,37 @@ The extension registers a `design_poster` tool that the LLM can call:
 | instagram-story | 1080x1920 | Instagram story |
 | facebook | 1200x630 | Facebook post |
 
+### Available Models
+
+| Provider | Models | Default |
+|----------|--------|---------|
+| gemini | gemini-2.0-flash-exp-image-generation, gemini-2.5-flash-preview-image, imagen-4.0-generate-001 | gemini-2.0-flash-exp-image-generation |
+| grok | grok-2-image | grok-2-image |
+| openai | dall-e-3, dall-e-2 | dall-e-3 |
+
 ### Commands
 
 - `/poster-styles` - List available design styles
 - `/poster-sizes` - List available output sizes
+- `/poster-models` - List available models
 
 ## API Pricing Reference
 
 | Provider | Model | Price per Image |
 |----------|-------|-----------------|
 | Gemini | gemini-2.0-flash-exp-image-generation | ~$0.02 |
+| Gemini | imagen-4.0-generate-001 | Requires billing |
 | Grok | grok-2-image | Requires credits |
-| OpenAI | DALL-E 3 HD | $0.08-0.12 |
+| OpenAI | dall-e-3 HD | $0.08-0.12 |
+| OpenAI | dall-e-2 | $0.02 |
 
 ## Example Output
 
 ```
 海報設計完成！
 
+Provider: gemini
+Model: gemini-2.0-flash-exp-image-generation
 尺寸：A4 (300dpi)
 成功：3 張
 
@@ -103,6 +119,25 @@ The extension registers a `design_poster` tool that the LLM can call:
 - 真耶穌教會風格: /tmp/poster-designer/1234567890/tjc-style-poster-1234567890.png
 - 一般基督教風格: /tmp/poster-designer/1234567890/christian-general-poster-1234567891.png
 - 創意自由風格: /tmp/poster-designer/1234567890/creative-free-poster-1234567892.png
+```
+
+## Integration
+
+The tool result includes base64 encoded images in the `details.images` array, making it easy to integrate with messaging platforms like Telegram:
+
+```typescript
+// Tool result structure
+{
+  content: [
+    { type: "text", text: "..." },
+    { type: "image", source: { type: "base64", media_type: "image/png", data: "..." } }
+  ],
+  details: {
+    images: [
+      { style: "tjc-style", styleName: "真耶穌教會風格", base64: "...", mimeType: "image/png", path: "..." }
+    ]
+  }
+}
 ```
 
 ## Development

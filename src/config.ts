@@ -18,6 +18,8 @@ export interface SizeConfig {
 export interface ProviderConfigItem {
 	apiKeyEnv: string;
 	enabled: boolean;
+	defaultModel: string;
+	availableModels: string[];
 }
 
 export interface Config {
@@ -92,14 +94,24 @@ Event details:
 		gemini: {
 			apiKeyEnv: "GEMINI_API_KEY",
 			enabled: true,
+			defaultModel: "gemini-2.0-flash-exp-image-generation",
+			availableModels: [
+				"gemini-2.0-flash-exp-image-generation",
+				"gemini-2.5-flash-preview-image",
+				"imagen-4.0-generate-001",
+			],
 		},
 		grok: {
 			apiKeyEnv: "GROK_API_KEY",
 			enabled: true,
+			defaultModel: "grok-2-image",
+			availableModels: ["grok-2-image"],
 		},
 		openai: {
 			apiKeyEnv: "OPENAI_API_KEY",
 			enabled: true,
+			defaultModel: "dall-e-3",
+			availableModels: ["dall-e-3", "dall-e-2"],
 		},
 	},
 };

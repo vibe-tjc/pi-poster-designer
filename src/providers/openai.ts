@@ -6,8 +6,8 @@ import type { GeneratedImage, GenerationRequest, ImageProvider } from "./types.j
 
 export class OpenAIProvider implements ImageProvider {
 	name = "openai";
+	model: string;
 	private apiKey: string;
-	private model: string;
 
 	constructor(apiKey: string, model: string = "dall-e-3") {
 		this.apiKey = apiKey;
@@ -30,7 +30,7 @@ export class OpenAIProvider implements ImageProvider {
 				n: 1,
 				size: size,
 				response_format: "b64_json",
-				quality: "hd",
+				quality: this.model === "dall-e-3" ? "hd" : undefined,
 			}),
 		});
 
@@ -55,7 +55,12 @@ export class OpenAIProvider implements ImageProvider {
 
 	private mapSize(width: number, height: number): string {
 		// DALL-E 3 supported sizes: 1024x1024, 1024x1792, 1792x1024
+		// DALL-E 2 supported sizes: 256x256, 512x512, 1024x1024
 		const ratio = width / height;
+
+		if (this.model === "dall-e-2") {
+			return "1024x1024";
+		}
 
 		if (ratio > 1.5) {
 			return "1792x1024"; // Landscape
@@ -67,10 +72,10 @@ export class OpenAIProvider implements ImageProvider {
 	}
 }
 
-export function createOpenAIProvider(): ImageProvider | null {
+export function createOpenAIProvider(model?: string): ImageProvider | null {
 	const apiKey = process.env.OPENAI_API_KEY;
 	if (!apiKey) {
 		return null;
 	}
-	return new OpenAIProvider(apiKey);
+	return new OpenAIProvider(apiKey, model);
 }

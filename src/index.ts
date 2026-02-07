@@ -36,23 +36,30 @@ const DesignPosterParams = Type.Object({
 			description: "圖片生成服務：gemini, grok, openai（預設 gemini）",
 		}),
 	),
+	model: Type.Optional(
+		Type.String({
+			description: "指定模型名稱，不指定則使用 provider 的預設模型",
+		}),
+	),
 });
 
 type DesignPosterInput = Static<typeof DesignPosterParams>;
 
-function getProvider(name: string, config: Config): ImageProvider | null {
+function getProvider(name: string, model: string | undefined, config: Config): ImageProvider | null {
 	const providerConfig = config.providers[name];
 	if (!providerConfig || !providerConfig.enabled) {
 		return null;
 	}
 
+	const modelToUse = model || providerConfig.defaultModel;
+
 	switch (name) {
 		case "gemini":
-			return createGeminiProvider();
+			return createGeminiProvider(modelToUse);
 		case "grok":
-			return createGrokProvider();
+			return createGrokProvider(modelToUse);
 		case "openai":
-			return createOpenAIProvider();
+			return createOpenAIProvider(modelToUse);
 		default:
 			return null;
 	}
@@ -60,6 +67,11 @@ function getProvider(name: string, config: Config): ImageProvider | null {
 
 export default function (pi: ExtensionAPI) {
 	const config = defaultConfig;
+
+	// Build available models description
+	const modelsDesc = Object.entries(config.providers)
+		.map(([name, cfg]) => `${name}: ${cfg.availableModels.join(", ")}`)
+		.join("\n");
 
 	// Register the design_poster tool
 	pi.registerTool({
@@ -72,12 +84,15 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 
 可用尺寸：${Object.entries(config.sizes)
 			.map(([k, v]) => `${k} (${v.name})`)
-			.join(", ")}`,
+			.join(", ")}
+
+可用模型：
+${modelsDesc}`,
 
 		parameters: DesignPosterParams,
 
 		async execute(toolCallId, params: DesignPosterInput, signal, onUpdate, ctx) {
-			const { eventInfo, styles: requestedStyles, size, provider: requestedProvider } = params;
+			const { eventInfo, styles: requestedStyles, size, provider: requestedProvider, model } = params;
 
 			// Get size configuration
 			const sizeKey = size || "a4";
@@ -97,7 +112,7 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 
 			// Get provider
 			const providerName = requestedProvider || config.defaultProvider;
-			const imageProvider = getProvider(providerName, config);
+			const imageProvider = getProvider(providerName, model, config);
 
 			if (!imageProvider) {
 				return {
@@ -121,6 +136,8 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 				path: string;
 				success: boolean;
 				error?: string;
+				base64?: string;
+				mimeType?: string;
 			}> = [];
 
 			// Generate images for each style
@@ -160,6 +177,8 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 						styleName: style.name,
 						path: outputPath,
 						success: true,
+						base64: image.data.toString("base64"),
+						mimeType: image.mimeType,
 					});
 				} catch (err) {
 					const errorMsg = err instanceof Error ? err.message : "Unknown error";
@@ -178,6 +197,8 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 			const failed = results.filter((r) => !r.success);
 
 			let summary = `海報設計完成！\n\n`;
+			summary += `Provider: ${providerName}\n`;
+			summary += `Model: ${imageProvider.model}\n`;
 			summary += `尺寸：${sizeConfig.name}\n`;
 			summary += `成功：${successful.length} 張\n`;
 
@@ -195,14 +216,49 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 				}
 			}
 
+			// Build content array with text and images
+			const content: Array<{ type: string; text?: string; source?: any }> = [
+				{ type: "text", text: summary },
+			];
+
+			// Add images to content for display
+			for (const r of successful) {
+				if (r.base64 && r.mimeType) {
+					content.push({
+						type: "image",
+						source: {
+							type: "base64",
+							media_type: r.mimeType,
+							data: r.base64,
+						},
+					});
+				}
+			}
+
 			return {
-				content: [{ type: "text", text: summary }],
+				content,
 				details: {
 					outputDir,
+					provider: providerName,
+					model: imageProvider.model,
 					size: sizeConfig,
-					results,
+					results: results.map((r) => ({
+						style: r.style,
+						styleName: r.styleName,
+						path: r.path,
+						success: r.success,
+						error: r.error,
+					})),
 					successful: successful.length,
 					failed: failed.length,
+					// Include base64 data for external integrations (e.g., Telegram)
+					images: successful.map((r) => ({
+						style: r.style,
+						styleName: r.styleName,
+						base64: r.base64,
+						mimeType: r.mimeType,
+						path: r.path,
+					})),
 				},
 			};
 		},
@@ -229,6 +285,22 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 			let text = "可用的海報尺寸：\n\n";
 			for (const [key, size] of Object.entries(config.sizes)) {
 				text += `${key}: ${size.name} (${size.width}x${size.height})\n`;
+			}
+			ctx.ui.notify(text, "info");
+		},
+	});
+
+	// Register command to list available models
+	pi.registerCommand("poster-models", {
+		description: "顯示可用的圖片生成模型",
+		handler: async (_args, ctx) => {
+			let text = "可用的圖片生成模型：\n\n";
+			for (const [name, cfg] of Object.entries(config.providers)) {
+				const status = cfg.enabled ? "✓" : "✗";
+				text += `${status} ${name}:\n`;
+				text += `  預設: ${cfg.defaultModel}\n`;
+				text += `  可用: ${cfg.availableModels.join(", ")}\n`;
+				text += `  API Key: ${cfg.apiKeyEnv}\n\n`;
 			}
 			ctx.ui.notify(text, "info");
 		},
