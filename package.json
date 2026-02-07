@@ -1,0 +1,35 @@
+{
+  "name": "pi-poster-designer",
+  "version": "0.1.0",
+  "description": "Pi extension for designing event invitation posters using AI image generation",
+  "author": "siygle",
+  "license": "MIT",
+  "keywords": [
+    "pi-package",
+    "poster",
+    "image-generation",
+    "ai",
+    "design",
+    "event",
+    "invitation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/siygle/pi-poster-designer"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "@sinclair/typebox": "*"
+  },
+  "pi": {
+    "extensions": ["./src/index.ts"]
+  }
+}
