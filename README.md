@@ -47,10 +47,10 @@ The extension registers a `design_poster` tool that the LLM can call:
 ```
 設計海報：
 
-活動：2024年聖誕音樂會
-地點：台北教會
-日期：2024/12/25
-時間：19:00-21:00
+活動：戶外音樂會
+地點：永康教會
+日期：2025/03/22
+時間：15:30-17:00
 ```
 
 ### Parameters
