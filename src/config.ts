@@ -94,10 +94,10 @@ Event details:
 		gemini: {
 			apiKeyEnv: "GEMINI_API_KEY",
 			enabled: true,
-			defaultModel: "gemini-2.0-flash-exp-image-generation",
+			defaultModel: "gemini-2.5-flash-image",
 			availableModels: [
-				"gemini-2.0-flash-exp-image-generation",
-				"gemini-2.5-flash-preview-image",
+				"gemini-2.5-flash-image",
+				"gemini-3-pro-image-preview",
 				"imagen-4.0-generate-001",
 			],
 		},
