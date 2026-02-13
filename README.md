@@ -6,7 +6,8 @@ A [Pi](https://github.com/badlogic/pi-mono) extension for designing event invita
 
 - 🎨 Multiple design styles (Church, Christian, Creative)
 - 📐 Multiple output sizes (A4, Instagram, Facebook, etc.)
-- 🤖 Multiple AI providers (Gemini, Grok, OpenAI)
+- 🤖 Multiple AI providers (Gemini/Nano Banana, Nano Banana Pro, Grok, OpenAI)
+- 🍌 **NEW**: Nano Banana Pro support for professional-quality image generation
 - 🌐 Bilingual support (Chinese/English)
 
 ## Installation
@@ -26,7 +27,7 @@ pi -e /path/to/pi-poster-designer
 Set the API key for your preferred image generation provider:
 
 ```bash
-# Google Gemini (default)
+# Google Gemini / Nano Banana / Nano Banana Pro (default)
 export GEMINI_API_KEY="your-api-key"
 
 # xAI Grok
@@ -58,7 +59,7 @@ The extension registers a `design_poster` tool that the LLM can call:
 | eventInfo | string | Event information (topic, time, location, program) |
 | styles | string[] | Style IDs to use (default: all) |
 | size | string | Output size (default: a4) |
-| provider | string | AI provider (default: gemini) |
+| provider | string | AI provider: gemini, nano-banana-pro, grok, openai (default: gemini) |
 
 ### Available Styles
 
@@ -83,11 +84,21 @@ The extension registers a `design_poster` tool that the LLM can call:
 - `/poster-styles` - List available design styles
 - `/poster-sizes` - List available output sizes
 
+## Providers
+
+| Provider ID | Model | Description |
+|-------------|-------|-------------|
+| gemini | gemini-2.5-flash-image (Nano Banana) | Fast & efficient, high-volume tasks |
+| nano-banana-pro | gemini-3-pro-image-preview | Professional quality, advanced reasoning, high-fidelity text |
+| grok | grok-2-image | xAI image generation |
+| openai | DALL-E 3 HD | OpenAI image generation |
+
 ## API Pricing Reference
 
 | Provider | Model | Price per Image |
 |----------|-------|-----------------|
-| Gemini | gemini-2.0-flash-exp-image-generation | ~$0.02 |
+| Gemini (Nano Banana) | gemini-2.5-flash-image | ~$0.02 |
+| Nano Banana Pro | gemini-3-pro-image-preview | ~$0.05 |
 | Grok | grok-2-image | Requires credits |
 | OpenAI | DALL-E 3 HD | $0.08-0.12 |
 

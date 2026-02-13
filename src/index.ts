@@ -14,6 +14,7 @@ import { defaultConfig, type Config } from "./config.js";
 import { createGeminiProvider } from "./providers/gemini.js";
 import { createGrokProvider } from "./providers/grok.js";
 import { createOpenAIProvider } from "./providers/openai.js";
+import { createNanaBananaProProvider } from "./providers/nano-banana-pro.js";
 import type { ImageProvider } from "./providers/types.js";
 
 // Tool parameters schema
@@ -33,7 +34,7 @@ const DesignPosterParams = Type.Object({
 	),
 	provider: Type.Optional(
 		Type.String({
-			description: "圖片生成服務：gemini, grok, openai（預設 gemini）",
+			description: "圖片生成服務：gemini, nano-banana-pro, grok, openai（預設 gemini）",
 		}),
 	),
 });
@@ -49,6 +50,8 @@ function getProvider(name: string, config: Config): ImageProvider | null {
 	switch (name) {
 		case "gemini":
 			return createGeminiProvider();
+		case "nano-banana-pro":
+			return createNanaBananaProProvider();
 		case "grok":
 			return createGrokProvider();
 		case "openai":
@@ -121,6 +124,8 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 				path: string;
 				success: boolean;
 				error?: string;
+				imageData?: string;
+				mimeType?: string;
 			}> = [];
 
 			// Generate images for each style
@@ -135,6 +140,7 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 							text: `正在生成第 ${i + 1}/${stylesToUse.length} 張海報（${style.name}）...`,
 						},
 					],
+					details: { progress: i + 1, total: stylesToUse.length },
 				});
 
 				// Build prompt
@@ -160,6 +166,8 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 						styleName: style.name,
 						path: outputPath,
 						success: true,
+						imageData: image.data.toString("base64"),
+						mimeType: image.mimeType,
 					});
 				} catch (err) {
 					const errorMsg = err instanceof Error ? err.message : "Unknown error";
@@ -195,12 +203,28 @@ ${config.styles.map((s) => `- ${s.id}: ${s.name} - ${s.description}`).join("\n")
 				}
 			}
 
+			// Build content array with text summary and images
+			const content: Array<{ type: "text"; text: string } | { type: "image"; data: string; mimeType: string }> = [
+				{ type: "text", text: summary },
+			];
+
+			// Add successful images to content
+			for (const r of successful) {
+				if (r.imageData && r.mimeType) {
+					content.push({
+						type: "image",
+						data: r.imageData,
+						mimeType: r.mimeType,
+					});
+				}
+			}
+
 			return {
-				content: [{ type: "text", text: summary }],
+				content,
 				details: {
 					outputDir,
 					size: sizeConfig,
-					results,
+					results: results.map(({ imageData, ...rest }) => rest), // Exclude imageData from details to reduce size
 					successful: successful.length,
 					failed: failed.length,
 				},
