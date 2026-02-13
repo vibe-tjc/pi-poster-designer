@@ -6,7 +6,8 @@ A [Pi](https://github.com/badlogic/pi-mono) extension for designing event invita
 
 - 🎨 Multiple design styles (Church, Christian, Creative)
 - 📐 Multiple output sizes (A4, Instagram, Facebook, etc.)
-- 🤖 Multiple AI providers (Gemini, Grok, OpenAI)
+- 🤖 Multiple AI providers (Gemini/Nano Banana, Nano Banana Pro, Grok, OpenAI)
+- 🍌 **NEW**: Nano Banana Pro support for professional-quality image generation
 - 🔧 Configurable models per provider
 - 🌐 Bilingual support (Chinese/English)
 - 📤 Returns base64 images for integration (e.g., Telegram)
@@ -28,7 +29,7 @@ pi -e /path/to/pi-poster-designer
 Set the API key for your preferred image generation provider:
 
 ```bash
-# Google Gemini (default)
+# Google Gemini / Nano Banana / Nano Banana Pro (default)
 export GEMINI_API_KEY="your-api-key"
 
 # xAI Grok
@@ -60,7 +61,7 @@ The extension registers a `design_poster` tool that the LLM can call:
 | eventInfo | string | Event information (topic, time, location, program) |
 | styles | string[] | Style IDs to use (default: all) |
 | size | string | Output size (default: a4) |
-| provider | string | AI provider (default: gemini) |
+| provider | string | AI provider: gemini, nano-banana-pro, grok, openai (default: gemini) |
 | model | string | Model name (default: provider's default) |
 
 ### Available Styles
@@ -95,10 +96,21 @@ The extension registers a `design_poster` tool that the LLM can call:
 - `/poster-sizes` - List available output sizes
 - `/poster-models` - List available models
 
+## Providers
+
+| Provider ID | Model | Description |
+|-------------|-------|-------------|
+| gemini | gemini-2.5-flash-image (Nano Banana) | Fast & efficient, high-volume tasks |
+| nano-banana-pro | gemini-3-pro-image-preview | Professional quality, advanced reasoning, high-fidelity text |
+| grok | grok-2-image | xAI image generation |
+| openai | DALL-E 3 HD | OpenAI image generation |
+
 ## API Pricing Reference
 
 | Provider | Model | Price per Image |
 |----------|-------|-----------------|
+| Gemini (Nano Banana) | gemini-2.5-flash-image | ~$0.02 |
+| Gemini(Nano Banana Pro) | gemini-3-pro-image-preview | ~$0.05 |
 | Gemini | gemini-2.0-flash-exp-image-generation | ~$0.02 |
 | Gemini | imagen-4.0-generate-001 | Requires billing |
 | Grok | grok-2-image | Requires credits |

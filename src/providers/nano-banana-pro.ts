@@ -1,20 +1,20 @@
 /**
- * Google Gemini / Nano Banana image generation provider
+ * Google Nano Banana Pro (Gemini 3 Pro Image Preview) provider
  *
- * Uses Gemini 2.5 Flash Image (Nano Banana) model by default.
- * Designed for speed and efficiency, optimized for high-volume, low-latency tasks.
+ * Designed for professional asset production with advanced reasoning ("Thinking")
+ * to follow complex instructions and render high-fidelity text.
  *
  * @see https://ai.google.dev/gemini-api/docs/image-generation
  */
 
 import type { GeneratedImage, GenerationRequest, ImageProvider } from "./types.js";
 
-export class GeminiProvider implements ImageProvider {
-	name = "gemini";
-	model: string;
+export class NanaBananaProProvider implements ImageProvider {
+	name = "nano-banana-pro";
 	private apiKey: string;
+	private model: string;
 
-	constructor(apiKey: string, model: string = "gemini-2.5-flash-image") {
+	constructor(apiKey: string, model: string = "gemini-3-pro-image-preview") {
 		this.apiKey = apiKey;
 		this.model = model;
 	}
@@ -38,7 +38,7 @@ export class GeminiProvider implements ImageProvider {
 						},
 					],
 					generationConfig: {
-						responseModalities: ["image", "text"],
+						responseModalities: ["IMAGE", "TEXT"],
 					},
 				}),
 			},
@@ -46,18 +46,18 @@ export class GeminiProvider implements ImageProvider {
 
 		if (!response.ok) {
 			const error = await response.text();
-			throw new Error(`Gemini API error: ${response.status} - ${error}`);
+			throw new Error(`Nano Banana Pro API error: ${response.status} - ${error}`);
 		}
 
 		const result = await response.json();
 
 		if (!result.candidates || result.candidates.length === 0) {
-			throw new Error("No candidates in Gemini response");
+			throw new Error("No candidates in Nano Banana Pro response");
 		}
 
 		const candidate = result.candidates[0];
 		if (!candidate.content || !candidate.content.parts) {
-			throw new Error("No content parts in Gemini response");
+			throw new Error("No content parts in Nano Banana Pro response");
 		}
 
 		for (const part of candidate.content.parts) {
@@ -70,14 +70,14 @@ export class GeminiProvider implements ImageProvider {
 			}
 		}
 
-		throw new Error("No image data found in Gemini response");
+		throw new Error("No image data found in Nano Banana Pro response");
 	}
 }
 
-export function createGeminiProvider(model?: string): ImageProvider | null {
+export function createNanaBananaProProvider(): ImageProvider | null {
 	const apiKey = process.env.GEMINI_API_KEY;
 	if (!apiKey) {
 		return null;
 	}
-	return new GeminiProvider(apiKey, model);
+	return new NanaBananaProProvider(apiKey);
 }

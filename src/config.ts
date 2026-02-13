@@ -101,6 +101,10 @@ Event details:
 				"imagen-4.0-generate-001",
 			],
 		},
+		"nano-banana-pro": {
+			apiKeyEnv: "GEMINI_API_KEY",
+			enabled: true,
+		},
 		grok: {
 			apiKeyEnv: "GROK_API_KEY",
 			enabled: true,

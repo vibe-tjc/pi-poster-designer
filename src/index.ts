@@ -14,6 +14,7 @@ import { defaultConfig, type Config } from "./config.js";
 import { createGeminiProvider } from "./providers/gemini.js";
 import { createGrokProvider } from "./providers/grok.js";
 import { createOpenAIProvider } from "./providers/openai.js";
+import { createNanaBananaProProvider } from "./providers/nano-banana-pro.js";
 import type { ImageProvider } from "./providers/types.js";
 
 // Tool parameters schema
@@ -33,7 +34,7 @@ const DesignPosterParams = Type.Object({
 	),
 	provider: Type.Optional(
 		Type.String({
-			description: "圖片生成服務：gemini, grok, openai（預設 gemini）",
+			description: "圖片生成服務：gemini, nano-banana-pro, grok, openai（預設 gemini）",
 		}),
 	),
 	model: Type.Optional(
@@ -55,7 +56,9 @@ function getProvider(name: string, model: string | undefined, config: Config): I
 
 	switch (name) {
 		case "gemini":
-			return createGeminiProvider(modelToUse);
+			return createGeminiProvider();
+		case "nano-banana-pro":
+			return createNanaBananaProProvider();
 		case "grok":
 			return createGrokProvider(modelToUse);
 		case "openai":
@@ -136,6 +139,7 @@ ${modelsDesc}`,
 				path: string;
 				success: boolean;
 				error?: string;
+				imageData?: string;
 				base64?: string;
 				mimeType?: string;
 			}> = [];
@@ -152,6 +156,7 @@ ${modelsDesc}`,
 							text: `正在生成第 ${i + 1}/${stylesToUse.length} 張海報（${style.name}）...`,
 						},
 					],
+					details: { progress: i + 1, total: stylesToUse.length },
 				});
 
 				// Build prompt
@@ -177,6 +182,7 @@ ${modelsDesc}`,
 						styleName: style.name,
 						path: outputPath,
 						success: true,
+						imageData: image.data.toString("base64"),
 						base64: image.data.toString("base64"),
 						mimeType: image.mimeType,
 					});
@@ -216,21 +222,18 @@ ${modelsDesc}`,
 				}
 			}
 
-			// Build content array with text and images
-			const content: Array<{ type: string; text?: string; source?: any }> = [
+			// Build content array with text summary and images
+			const content: Array<{ type: "text"; text: string } | { type: "image"; data: string; mimeType: string }> = [
 				{ type: "text", text: summary },
 			];
 
-			// Add images to content for display
+			// Add successful images to content
 			for (const r of successful) {
-				if (r.base64 && r.mimeType) {
+				if (r.imageData && r.mimeType) {
 					content.push({
 						type: "image",
-						source: {
-							type: "base64",
-							media_type: r.mimeType,
-							data: r.base64,
-						},
+						data: r.imageData,
+						mimeType: r.mimeType,
 					});
 				}
 			}
@@ -242,13 +245,7 @@ ${modelsDesc}`,
 					provider: providerName,
 					model: imageProvider.model,
 					size: sizeConfig,
-					results: results.map((r) => ({
-						style: r.style,
-						styleName: r.styleName,
-						path: r.path,
-						success: r.success,
-						error: r.error,
-					})),
+					results: results.map(({ imageData, ...rest }) => rest), // Exclude imageData from details to reduce size
 					successful: successful.length,
 					failed: failed.length,
 					// Include base64 data for external integrations (e.g., Telegram)
