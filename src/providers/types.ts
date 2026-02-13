@@ -17,6 +17,7 @@ export interface GenerationRequest {
 
 export interface ImageProvider {
 	name: string;
+	model: string;
 	generate(request: GenerationRequest): Promise<GeneratedImage>;
 }
 
@@ -24,4 +25,6 @@ export interface ProviderConfig {
 	name: string;
 	apiKeyEnv: string;
 	enabled: boolean;
+	defaultModel: string;
+	availableModels: string[];
 }

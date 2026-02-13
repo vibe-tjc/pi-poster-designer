@@ -11,8 +11,8 @@ import type { GeneratedImage, GenerationRequest, ImageProvider } from "./types.j
 
 export class GeminiProvider implements ImageProvider {
 	name = "gemini";
+	model: string;
 	private apiKey: string;
-	private model: string;
 
 	constructor(apiKey: string, model: string = "gemini-2.5-flash-image") {
 		this.apiKey = apiKey;
@@ -74,10 +74,10 @@ export class GeminiProvider implements ImageProvider {
 	}
 }
 
-export function createGeminiProvider(): ImageProvider | null {
+export function createGeminiProvider(model?: string): ImageProvider | null {
 	const apiKey = process.env.GEMINI_API_KEY;
 	if (!apiKey) {
 		return null;
 	}
-	return new GeminiProvider(apiKey);
+	return new GeminiProvider(apiKey, model);
 }

@@ -6,8 +6,8 @@ import type { GeneratedImage, GenerationRequest, ImageProvider } from "./types.j
 
 export class GrokProvider implements ImageProvider {
 	name = "grok";
+	model: string;
 	private apiKey: string;
-	private model: string;
 
 	constructor(apiKey: string, model: string = "grok-2-image") {
 		this.apiKey = apiKey;
@@ -49,10 +49,10 @@ export class GrokProvider implements ImageProvider {
 	}
 }
 
-export function createGrokProvider(): ImageProvider | null {
+export function createGrokProvider(model?: string): ImageProvider | null {
 	const apiKey = process.env.GROK_API_KEY || process.env.XAI_API_KEY;
 	if (!apiKey) {
 		return null;
 	}
-	return new GrokProvider(apiKey);
+	return new GrokProvider(apiKey, model);
 }
