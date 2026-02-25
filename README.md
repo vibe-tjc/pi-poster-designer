@@ -15,13 +15,7 @@ A [Pi](https://github.com/badlogic/pi-mono) extension for designing event invita
 ## Installation
 
 ```bash
-pi install npm:pi-poster-designer
-```
-
-Or for development:
-
-```bash
-pi -e /path/to/pi-poster-designer
+pi install [npm:pi-poster-designer](https://github.com/vibe-tjc/pi-poster-designer.git)
 ```
 
 ## Configuration
