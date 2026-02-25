@@ -104,6 +104,8 @@ Event details:
 		"nano-banana-pro": {
 			apiKeyEnv: "GEMINI_API_KEY",
 			enabled: true,
+			defaultModel: "nano-banana-pro",
+			availableModels: ["nano-banana-pro"],
 		},
 		grok: {
 			apiKeyEnv: "GROK_API_KEY",
