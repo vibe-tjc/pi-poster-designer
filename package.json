@@ -30,6 +30,11 @@
     "@sinclair/typebox": "*"
   },
   "pi": {
-    "extensions": ["./src/index.ts"]
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
   }
 }

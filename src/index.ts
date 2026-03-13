@@ -5,7 +5,7 @@
  * 1. Receive event info → generate 3-5 design proposals
  * 2. User selects a design proposal
  * 3. User selects output size
- * 4. User selects AI provider/model
+ * 4. User selects AI model
  * 5. Confirm and generate
  */
 
@@ -130,6 +130,8 @@ async function stepSelectSize(
 async function stepSelectProviderModel(
 	ctx: ExtensionContext,
 	config: Config,
+	presetProvider?: string,
+	presetModel?: string,
 ): Promise<{ provider: string; model: string } | null> {
 	const available = getAvailableProviders(config);
 
@@ -138,20 +140,33 @@ async function stepSelectProviderModel(
 		return null;
 	}
 
+	// Determine global default
+	const globalDefaultProvider = presetProvider || config.defaultProvider;
+	const globalDefaultModel = presetModel || config.providers[globalDefaultProvider]?.defaultModel;
+
 	// Build provider options with their models
 	const providerModelOptions: { label: string; provider: string; model: string }[] = [];
 
 	for (const providerName of available) {
 		const cfg = config.providers[providerName];
 		for (const model of cfg.availableModels) {
-			const isDefault = model === cfg.defaultModel;
-			const label = `${providerName} / ${model}${isDefault ? " ⭐" : ""}`;
+			const isGlobalDefault = providerName === globalDefaultProvider && model === globalDefaultModel;
+			const label = `${providerName} / ${model}${isGlobalDefault ? " ⭐ 預設" : ""}`;
 			providerModelOptions.push({ label, provider: providerName, model });
 		}
 	}
 
+	// Sort so the default option appears first
+	const defaultIndex = providerModelOptions.findIndex(
+		(o) => o.provider === globalDefaultProvider && o.model === globalDefaultModel,
+	);
+	if (defaultIndex > 0) {
+		const [defaultOption] = providerModelOptions.splice(defaultIndex, 1);
+		providerModelOptions.unshift(defaultOption);
+	}
+
 	const labels = providerModelOptions.map((o) => o.label);
-	const selected = await ctx.ui.select("選擇生成模型：", labels);
+	const selected = await ctx.ui.select("選擇圖片生成模型：", labels);
 
 	if (selected === undefined) return null;
 
@@ -377,21 +392,16 @@ async function executeInteractive(
 		}
 	}
 
-	// ── Step 4: Select provider/model ──
-	let providerName = presetProvider || config.defaultProvider;
-	let modelName = presetModel;
-
-	if (!presetProvider) {
-		const providerModel = await stepSelectProviderModel(ctx, config);
-		if (!providerModel) {
-			return {
-				content: [{ type: "text" as const, text: "使用者取消了海報設計" }],
-				details: { cancelled: true },
-			};
-		}
-		providerName = providerModel.provider;
-		modelName = providerModel.model;
+	// ── Step 4: Select model ──
+	const providerModel = await stepSelectProviderModel(ctx, config, presetProvider, presetModel);
+	if (!providerModel) {
+		return {
+			content: [{ type: "text" as const, text: "使用者取消了海報設計" }],
+			details: { cancelled: true },
+		};
 	}
+	const providerName = providerModel.provider;
+	const modelName = providerModel.model;
 
 	// ── Step 5: Confirm ──
 	const sizeConfig = config.sizes[sizeKey] || config.defaultSize;
