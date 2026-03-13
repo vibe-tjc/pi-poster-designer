@@ -11,8 +11,8 @@ import type { GeneratedImage, GenerationRequest, ImageProvider } from "./types.j
 
 export class NanaBananaProProvider implements ImageProvider {
 	name = "nano-banana-pro";
+	model: string;
 	private apiKey: string;
-	private model: string;
 
 	constructor(apiKey: string, model: string = "gemini-3-pro-image-preview") {
 		this.apiKey = apiKey;
